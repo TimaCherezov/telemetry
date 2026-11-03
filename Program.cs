@@ -1,3 +1,4 @@
+using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -9,16 +10,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+builder.Services.AddSingleton<Metrics>();
+
 builder.Logging.AddOpenTelemetry(options =>
 {
     options
         .SetResourceBuilder(
             ResourceBuilder.CreateDefault()
-                .AddService("TelemetryExample"))
+                .AddService("MetricsService"))
         .AddConsoleExporter();
 });
 builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService("TelemetryExample"))
+    .ConfigureResource(resource => resource.AddService("MetricsService"))
     .WithTracing(tracing => tracing
         .AddAspNetCoreInstrumentation()
         .AddConsoleExporter())
@@ -26,7 +29,8 @@ builder.Services.AddOpenTelemetry()
         .AddPrometheusExporter()
         .AddAspNetCoreInstrumentation()
         .AddConsoleExporter()
-        .AddMeter(nameof(Metrics)));
+        .AddMeter(nameof(Metrics)))
+        .UseOtlpExporter();
 
 var app = builder.Build();
 
